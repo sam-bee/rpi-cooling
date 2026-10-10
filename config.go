@@ -78,7 +78,7 @@ func defaultConfig() Config {
 	return Config{
 		ChipLabel:      defaultChipLabel,
 		GPIO:           defaultGPIO,
-		ActiveLow:      true,
+		ActiveLow:      false,
 		ThermalRoot:    defaultThermalRoot,
 		PollInterval:   defaultPollInterval,
 		MinimumOn:      defaultMinimumOn,

@@ -2,7 +2,7 @@
 
 `rpi-cooling` is a small Go controller for the Raspberry Pi 5 cooling relay. It reads the CPU temperature and owns the GPIO line continuously while the service runs. The intended repository is `git@github.com:sam-bee/rpi-cooling.git`; on the Pi the source checkout is `/home/sierra/workfiles/tech-projects/rpi-cooling`.
 
-The hardware currently uses physical header pin 11 (BCM GPIO17), with relay VCC on physical pin 2 (5 V) and relay ground on physical pin 6 (GND). The relay contacts are wired normally open. The manual always-on bypass has been removed; a controlled test confirmed that this module energises when its GPIO input is LOW, so the deployed configuration uses `--active-low=true`.
+The hardware currently uses physical header pin 11 (BCM GPIO17), with relay VCC on physical pin 2 (5 V) and relay ground on physical pin 6 (GND). The relay contacts are wired normally open. The manual always-on bypass has been removed; a controlled test confirmed that this module energises when its GPIO input is HIGH, so the deployed configuration uses `--active-low=false`.
 
 ## Control contract
 
@@ -17,7 +17,7 @@ The controller uses strict thresholds:
 - at or above 65 °C, bypass the normal off dwell;
 - request ON at startup and whenever the temperature sensor fails.
 
-The GPIO chip is selected by the `pinctrl-rp1` label for the Pi 5 RP1 GPIO controller. The line is GPIO17 even though the physical header position is pin 11. `--active-low` is configurable; it cannot be inferred from a normally open contact description. The installed module was tested directly: LOW energises cooling and HIGH de-energises it, so `--active-low=true` is the deliberate setting for this wiring.
+The GPIO chip is selected by the `pinctrl-rp1` label for the Pi 5 RP1 GPIO controller. The line is GPIO17 even though the physical header position is pin 11. `--active-low` is configurable and defaults to false; it cannot be inferred from a normally open contact description. The installed module was tested directly: HIGH energises cooling and LOW de-energises it, so `--active-low=false` is the deliberate setting for this wiring.
 
 The requested GPIO state cannot confirm that the cooling circuit has flowed or that the relay contacts have closed. Normally-open contacts leave cooling off when the relay is de-energised; software cannot guarantee cooling ON during a process crash, power loss, or reset. Retain a way to restore cooling manually while commissioning the pump and service.
 
@@ -63,7 +63,7 @@ sudo make rollback
 sudo systemctl enable --now rpi-cooling.service
 ```
 
-Rollback does not overwrite `/etc/rpi-cooling.conf`. If the configuration must change, edit the `RPI_COOLING_FLAGS` line deliberately, inspect `--active-low=true`, then reload the service:
+Rollback does not overwrite `/etc/rpi-cooling.conf`. If the configuration must change, edit the `RPI_COOLING_FLAGS` line deliberately, inspect `--active-low=false`, then reload the service:
 
 ```sh
 sudoedit /etc/rpi-cooling.conf
@@ -81,4 +81,4 @@ sudo systemctl restart rpi-cooling.service
 sudo systemctl disable --now rpi-cooling.service
 ```
 
-The service invocation reads `/etc/rpi-cooling.conf` as a systemd environment file and supplies the resulting flags to the binary. The relay polarity test confirmed `--active-low=true`; recheck this setting before moving the controller to different relay hardware.
+The service invocation reads `/etc/rpi-cooling.conf` as a systemd environment file and supplies the resulting flags to the binary. The relay polarity test confirmed `--active-low=false`; recheck this setting before moving the controller to different relay hardware.

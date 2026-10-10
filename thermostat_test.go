@@ -39,9 +39,34 @@ type fakeSensor struct {
 	readNotify chan struct{}
 }
 
-func TestDefaultConfigUsesConfirmedActiveLowPolarity(t *testing.T) {
-	if !defaultConfig().ActiveLow {
-		t.Fatal("confirmed relay polarity must default to active-low")
+func TestDefaultConfigUsesConfirmedActiveHighPolarity(t *testing.T) {
+	if defaultConfig().ActiveLow {
+		t.Fatal("confirmed relay polarity must default to active-high")
+	}
+}
+
+func TestParseRelayStateMapsPhysicalLevelsForBothPolarities(t *testing.T) {
+	tests := []struct {
+		name      string
+		activeLow bool
+		level     string
+		wantOn    bool
+	}{
+		{name: "active-high-high", activeLow: false, level: "high", wantOn: true},
+		{name: "active-high-low", activeLow: false, level: "low", wantOn: false},
+		{name: "active-low-high", activeLow: true, level: "high", wantOn: false},
+		{name: "active-low-low", activeLow: true, level: "low", wantOn: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := parseRelayState(Config{ActiveLow: tt.activeLow}, "", tt.level)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got != tt.wantOn {
+				t.Fatalf("parseRelayState(activeLow=%t, level=%q) = %t, want %t", tt.activeLow, tt.level, got, tt.wantOn)
+			}
+		})
 	}
 }
 

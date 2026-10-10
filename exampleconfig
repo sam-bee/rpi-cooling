@@ -3,7 +3,7 @@
 # Copy it to /etc/rpi-cooling.conf only when that file does not already exist;
 # the installer preserves an existing configuration.
 
-# Physical header pin 11 is BCM GPIO17. The tested relay energises on LOW, so
-# active-low=true is deliberate for this installed module. Normally open is a
+# Physical header pin 11 is BCM GPIO17. The tested relay energises on HIGH, so
+# active-low=false is deliberate for this installed module. Normally open is a
 # contact arrangement and does not determine this input polarity.
-RPI_COOLING_FLAGS=--chip-label=pinctrl-rp1 --gpio=17 --active-low=true --thermal-root=/sys/class/thermal --poll=2s --min-on=120s --min-off=60s --status-interval=30s --on-threshold=40 --off-threshold=30 --emergency-threshold=65
+RPI_COOLING_FLAGS=--chip-label=pinctrl-rp1 --gpio=17 --active-low=false --thermal-root=/sys/class/thermal --poll=2s --min-on=120s --min-off=60s --status-interval=30s --on-threshold=40 --off-threshold=30 --emergency-threshold=65
