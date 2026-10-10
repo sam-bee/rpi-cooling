@@ -1,0 +1,29 @@
+[Unit]
+Description=Raspberry Pi CPU temperature cooling relay controller
+Documentation=https://github.com/sam-bee/rpi-cooling
+After=local-fs.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=notify
+NotifyAccess=main
+User=root
+Group=root
+EnvironmentFile=/etc/rpi-cooling.conf
+ExecStart=/usr/local/bin/rpi-cooling $RPI_COOLING_FLAGS
+Restart=always
+RestartSec=2s
+WatchdogSec=15s
+TimeoutStartSec=30s
+TimeoutStopSec=30s
+KillSignal=SIGTERM
+
+# The controller owns the GPIO line for its whole lifetime. Keep this unit
+# root-owned for GPIO access and do not add PrivateDevices or similar sandboxing
+# that hides the GPIO character device. There is intentionally no ExecStop or
+# ExecStopPost command: the controller requests ON on graceful shutdown while
+# it still owns the line, then releases it; the post-release state is unknown.
+# The unit must not force an unconditional relay-off state.
+
+[Install]
+WantedBy=multi-user.target

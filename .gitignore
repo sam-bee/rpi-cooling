@@ -1,0 +1,15 @@
+# Build and test output
+/build/
+/rpi-cooling
+*.test
+coverage.out
+
+# Local development state
+.env
+.env.*
+*.local
+
+# Editor and OS noise
+.DS_Store
+/.idea/
+/.vscode/
