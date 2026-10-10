@@ -28,8 +28,10 @@ Omarchy provides Go through mise. Select the requested toolchain in the user env
 ```sh
 mise use --global go@1.27.2
 go version
-make test
-make build
+go test ./...
+go vet ./...
+mkdir -p build
+CGO_ENABLED=0 go build -trimpath -ldflags "-X main.Version=$(git rev-parse --short HEAD)" -o build/rpi-cooling .
 ./build/rpi-cooling --version
 ```
 
@@ -42,14 +44,18 @@ The daemon reads command-line flags. The shipped example passes the deployment v
 Build from `/home/sierra/workfiles/tech-projects/rpi-cooling`, then install as root:
 
 ```sh
-make build
-sudo make install
+sudo install -o root -g root -m 0755 build/rpi-cooling /usr/local/bin/rpi-cooling
+sudo install -o root -g root -m 0644 systemd/rpi-cooling.service /etc/systemd/system/rpi-cooling.service
+if ! sudo test -e /etc/rpi-cooling.conf; then
+  sudo install -o root -g root -m 0600 exampleconfig /etc/rpi-cooling.conf
+fi
+sudo systemctl daemon-reload
 sudo systemctl enable --now rpi-cooling.service
 ```
 
-The installer writes the root-owned binary to `/usr/local/bin/rpi-cooling`, the unit to `/etc/systemd/system/rpi-cooling.service`, and creates `/etc/rpi-cooling.conf` from [`exampleconfig`](exampleconfig) only when no configuration exists. The configuration is a systemd `EnvironmentFile` containing one `RPI_COOLING_FLAGS` line; the unit expands those flags when starting the binary. It sets the binary and unit to mode 0755/0644 and a newly created configuration to mode 0600. An existing configuration is preserved so an update cannot silently change `--active-low` or another deliberate setting.
+These commands write the root-owned binary to `/usr/local/bin/rpi-cooling`, the unit to `/etc/systemd/system/rpi-cooling.service`, and create `/etc/rpi-cooling.conf` from [`exampleconfig`](exampleconfig) only when no configuration exists. The configuration is a systemd `EnvironmentFile` containing one `RPI_COOLING_FLAGS` line; the unit expands those flags when starting the binary. They set the binary and unit to mode 0755/0644 and a newly created configuration to mode 0600. An existing configuration is preserved so an update cannot silently change `--active-low` or another deliberate setting.
 
-`make install` saves the previous binary and unit under `/var/backups/rpi-cooling/`. To restore those two files after reviewing the change:
+If GNU make is available, `make build`, `sudo make install`, and `sudo make enable` are equivalent convenience targets. The Pi build above needs only Go and Git. `make install` saves the previous binary and unit under `/var/backups/rpi-cooling/`. To restore those two files after reviewing the change:
 
 ```sh
 sudo systemctl disable --now rpi-cooling.service
